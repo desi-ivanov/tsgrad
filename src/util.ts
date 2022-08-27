@@ -1,0 +1,1 @@
+export const zip = <T,U>(xs: T[], ys: U[]): [T,U][] => xs.map((x,i) => [x,ys[i]]);

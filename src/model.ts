@@ -10,7 +10,7 @@ export class Model {
       .filter(p => p instanceof Parameter || p instanceof Model)
       .flatMap(p => p instanceof Parameter ? [p] : p.parameters());
   }
-  forward = (xs: Parameter[]): Parameter[] => {
+  forward(xs: Parameter[] | Parameter[][]): Parameter[] | Parameter[][] {
     return xs;
   }
 }

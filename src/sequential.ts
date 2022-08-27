@@ -8,5 +8,5 @@ export class Sequential extends Model {
     this.layers = layers;
   }
   parameters = () => this.layers.flatMap(l => l.parameters());
-  forward = (xs: Parameter[]) => this.layers.reduce((a, l) => l.forward(a), xs);
+  forward = (xs: Parameter[] | Parameter[][]) => this.layers.reduce((a, l) => l.forward(a), xs);
 }
