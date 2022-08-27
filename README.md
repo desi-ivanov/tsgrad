@@ -1,12 +1,11 @@
 # tsgrad
-Autograd in typescript
-
+A simple automatic differentiation library
 ## Example
 ```ts
-import { ReLU, Sigmoid } from "../../src/act";
-import { Parameter } from "../../src/autograd";
-import { Linear } from "../../src/linear";
-import { Sequential } from "../../src/sequential";
+import { ReLU, Sigmoid } from "./act";
+import { Parameter } from "./autograd";
+import { Linear } from "./linear";
+import { Sequential } from "./sequential";
 
 const model = new Sequential(
   new Linear(2, 10),
@@ -31,3 +30,6 @@ for(let epoch = 0; epoch < 2000000; epoch++) {
   console.log(`Epoch ${epoch}: loss ${loss.getValue()}, acc ${yPred.map(y => y.getValue()).map(y => y > 0.5 ? 1 : 0).filter((y, i) => y === ys[i].getValue()).length / ys.length}`);
 }
 ```
+
+## Credits
+Highly inspired by torch's [autograd](https://pytorch.org/docs/stable/autograd.html) and Karpathy's [micrograd](https://github.com/karpathy/micrograd).
