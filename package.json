@@ -1,0 +1,11 @@
+{
+  "name": "tsgrad",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/desi-ivanov/tsgrad.git",
+  "author": "evolveyourmind <20824840+desi-ivanov@users.noreply.github.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^18.7.13"
+  }
+}
