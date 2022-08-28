@@ -19,7 +19,9 @@ export class Parameter {
       }
     )
   }
-  sub = (other: Parameter | number) => this.add((other instanceof Parameter ? other : new Parameter(other)).mul(-1))
+
+  sub = (other: Parameter | number) => this.add((other instanceof Parameter ? other : new Parameter(other)).neg())
+  neg = () => this.mul(-1)
   mul = (other: Parameter | number) => {
     const otherPar = other instanceof Parameter ? other : new Parameter(other)
     return new Parameter(
@@ -39,6 +41,37 @@ export class Parameter {
         this.grad += grad * this.value ** (exp - 1) * exp
       }
     )
+  }
+  div = (other: Parameter | number) => {
+    const otherPar = other instanceof Parameter ? other : new Parameter(other)
+    return new Parameter(
+      this.value / otherPar.value,
+      [this, otherPar],
+      (grad: number) => {
+        this.grad += grad / otherPar.value
+        otherPar.grad -= grad * this.value / otherPar.value ** 2
+      }
+    )
+  }
+  exp = () => {
+    return new Parameter(
+      Math.exp(this.value),
+      [this],
+      (grad: number) => {
+        this.grad += grad * Math.exp(this.value)
+      }
+    );
+  }
+  log = () => {
+    return new Parameter(
+      this.value <= 0 ? -999999 : Math.log(this.value),
+      [this],
+      (grad: number) => {
+        if(this.value > 0) {
+          this.grad += grad / this.value
+        }
+      }
+    );
   }
   relu = () => {
     const out = new Parameter(
@@ -71,6 +104,7 @@ export class Parameter {
     return out;
   }
   getValue = () => this.value
+  setValue = (value: number) => { this.value = value }
   zero_grad() { this.grad = 0 }
   backward = () => {
     const topo: Parameter[] = [];
