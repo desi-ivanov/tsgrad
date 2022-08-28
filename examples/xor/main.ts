@@ -19,7 +19,7 @@ const learning_rate = 0.01
 
 for(let epoch = 0; epoch < 2000000; epoch++) {
   model.zero_grad();
-  const yPred = xs.map(x => model.forward(x)).flat();
+  const yPred = xs.map(x => model.forward(x)).flat() as Parameter[];
   const loss = computeLoss(yPred, ys);
   loss.backward();
   model.parameters().forEach(p => p.update(learning_rate));
