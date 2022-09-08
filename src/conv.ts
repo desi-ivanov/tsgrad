@@ -1,7 +1,7 @@
 import { Parameter } from "./autograd";
 import { Model } from "./model";
 
-export class Conv2d extends Model {
+export class Conv1d extends Model {
   private readonly w: Parameter[][];
   constructor(
     public readonly kernel_size: number,
