@@ -3,8 +3,8 @@
 import * as fs from "fs";
 import * as path from "path";
 export const trainingSet = () => readImgs(
-  path.join(__dirname, "..", "..", "..", "train-images-idx3-ubyte"),
-  path.join(__dirname, "..", "..", "..", "train-labels-idx1-ubyte"),
+  path.join(__dirname, "..", "..", "..", "data", "MNIST", "raw", "train-images-idx3-ubyte"),
+  path.join(__dirname, "..", "..", "..", "data", "MNIST", "raw", "train-labels-idx1-ubyte"),
 )
 export function readImgs(imgsPath: string, labelsPath: string) {
   const fbuff = fs.readFileSync(imgsPath);

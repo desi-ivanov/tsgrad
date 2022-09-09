@@ -54,22 +54,21 @@ export class Parameter {
     )
   }
   exp = () => {
+    const v = Math.exp(this.value);
     return new Parameter(
-      Math.exp(this.value),
+      v,
       [this],
       (grad: number) => {
-        this.grad += grad * Math.exp(this.value)
+        this.grad += grad * v
       }
     );
   }
   log = () => {
     return new Parameter(
-      this.value <= 0 ? -999999 : Math.log(this.value),
+      Math.log(this.value),
       [this],
       (grad: number) => {
-        if(this.value > 0) {
-          this.grad += grad / this.value
-        }
+        this.grad += grad / this.value
       }
     );
   }
@@ -124,13 +123,10 @@ export class Parameter {
     this.grad = 1;
     for(const param of topo) {
       param.backprop(param.grad);
-      if(isNaN(param.value)) {
-        throw new Error("NaN");
-      }
     }
   }
-  update = (learning_rate: number) => {
-    this.value -= learning_rate * this.grad;
+  update = (lr: number) => {
+    this.value -= lr * this.grad;
   }
   toString = () => `v=${this.value} g=${this.grad}`
 }
