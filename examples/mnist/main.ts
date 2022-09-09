@@ -1,4 +1,4 @@
-import { ReLU, Sigmoid, Softmax } from "../../src/act";
+import { ReLU, Softmax } from "../../src/act";
 import { Parameter } from "../../src/autograd";
 import { Conv1d } from "../../src/conv";
 import { Flatten } from "../../src/flatten";
@@ -15,7 +15,7 @@ const model = new Sequential(
   new Conv1d(4, 2, 2),
   new ReLU(),
   new Flatten(),
-  new Linear(16, 10, true),
+  new Linear(16, 10),
   new Softmax(),
 );
 
@@ -24,8 +24,8 @@ const sq = Math.floor(data.images[0].length ** 0.5)
 
 const efficientCrossEntropy = (ysPred: Parameter[], y: number) => ysPred[y].log().neg();
 
-const xss = data.images.slice(0, 10000);
-const yss = data.labels.slice(0, 10000);
+const xss = data.images;
+const yss = data.labels;
 
 const batchSize = 16;
 const learningRate = 0.01;
