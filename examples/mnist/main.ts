@@ -1,4 +1,5 @@
 import { ReLU, Softmax } from "../../src/act";
+import { Adam } from "../../src/optim"
 import { Parameter } from "../../src/autograd";
 import { Conv1d } from "../../src/conv";
 import { Flatten } from "../../src/flatten";
@@ -30,6 +31,8 @@ const yss = data.labels;
 const batchSize = 16;
 const learningRate = 0.01;
 
+const optim = new Adam(model.parameters(), learningRate);
+
 for(let epoch = 0; epoch < 2000000; epoch++) {
   const preds: number[] = [];
   const reals: number[] = [];
@@ -49,7 +52,7 @@ for(let epoch = 0; epoch < 2000000; epoch++) {
       reals.push(y);
       losses.push(loss.getValue());
     }
-    model.parameters().forEach(p => p.update(learningRate / batchSize));
+    optim.step();
   }
   console.log(`Epoch ${epoch} acc: ${zip(preds, reals).filter(([p, r]) => p === r).length / preds.length}, loss ${losses.reduce((a, v) => a + v, 0) / losses.length}`);
 }

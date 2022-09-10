@@ -2,7 +2,7 @@ import { Parameter } from "./autograd";
 import { Model } from "./model";
 
 export class Conv1d extends Model {
-  private readonly w: Parameter[][];
+  public readonly w: Parameter[][];
   constructor(
     public readonly kernel_size: number,
     public readonly stride: number,

@@ -104,6 +104,7 @@ export class Parameter {
   }
   getValue = () => this.value
   setValue = (value: number) => { this.value = value }
+  getGrad = () => this.grad
   zero_grad() { this.grad = 0 }
   backward = () => {
     const topo: Parameter[] = [];
@@ -124,9 +125,6 @@ export class Parameter {
     for(const param of topo) {
       param.backprop(param.grad);
     }
-  }
-  update = (lr: number) => {
-    this.value -= lr * this.grad;
   }
   toString = () => `v=${this.value} g=${this.grad}`
 }
