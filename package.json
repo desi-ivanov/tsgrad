@@ -5,7 +5,18 @@
   "repository": "https://github.com/desi-ivanov/tsgrad.git",
   "author": "evolveyourmind <20824840+desi-ivanov@users.noreply.github.com>",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "bundle:web": "rollup -c rollup.config.ts --configPlugin @rollup/plugin-typescript -w"
+  },
   "devDependencies": {
-    "@types/node": "^18.7.13"
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-typescript": "^8.5.0",
+    "@types/node": "^18.7.13",
+    "@types/progress": "^2.0.5",
+    "progress": "^2.0.3",
+    "rollup": "^2.79.0",
+    "tslib": "^2.4.0",
+    "typescript": "^4.8.3"
   }
 }
