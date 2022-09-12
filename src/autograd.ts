@@ -1,83 +1,81 @@
+// inspired by https://github.com/karpathy/micrograd/blob/master/micrograd/engine.py
 export class Parameter {
   private grad: number
   constructor(
     private value: number,
     public readonly children: Parameter[] = [],
-    private readonly backprop: (grad: number) => void = () => { }
+    private readonly gradfn: () => void = () => { },
   ) {
     this.grad = 0
   }
 
   add = (other: Parameter | number) => {
     const otherPar = other instanceof Parameter ? other : new Parameter(other)
-    return new Parameter(
+    const out = new Parameter(
       this.value + otherPar.value,
       [this, otherPar],
-      (grad: number) => {
-        this.grad += grad
-        otherPar.grad += grad
-      }
-    )
+      () => {
+        this.grad += out.grad
+        otherPar.grad += out.grad
+      },
+    );
+    return out;
   }
 
   sub = (other: Parameter | number) => this.add((other instanceof Parameter ? other : new Parameter(other)).neg())
   neg = () => this.mul(-1)
   mul = (other: Parameter | number) => {
     const otherPar = other instanceof Parameter ? other : new Parameter(other)
-    return new Parameter(
+    const out = new Parameter(
       this.value * otherPar.value,
       [this, otherPar],
-      (grad: number) => {
-        this.grad += grad * otherPar.value
-        otherPar.grad += grad * this.value
-      }
-    )
+      () => {
+        this.grad += otherPar.value * out.grad
+        otherPar.grad += this.value * out.grad
+      },
+    );
+    return out;
   }
   pow = (exp: number) => {
-    return new Parameter(
+    const out = new Parameter(
       this.value ** exp,
       [this],
-      (grad: number) => {
-        this.grad += grad * this.value ** (exp - 1) * exp
+      () => {
+        this.grad += exp * this.value ** (exp - 1) * out.grad;
       }
-    )
+    );
+    return out;
   }
   div = (other: Parameter | number) => {
     const otherPar = other instanceof Parameter ? other : new Parameter(other)
-    return new Parameter(
-      this.value / otherPar.value,
-      [this, otherPar],
-      (grad: number) => {
-        this.grad += grad / otherPar.value
-        otherPar.grad -= grad * this.value / otherPar.value ** 2
-      }
-    )
+    return this.mul(otherPar.pow(-1));
   }
   exp = () => {
-    const v = Math.exp(this.value);
-    return new Parameter(
-      v,
+    const out = new Parameter(
+      Math.exp(this.value),
       [this],
-      (grad: number) => {
-        this.grad += grad * v
+      () => {
+        this.grad += out.value * out.grad;
       }
     );
+    return out;
   }
   log = () => {
-    return new Parameter(
+    const out = new Parameter(
       Math.log(this.value),
       [this],
-      (grad: number) => {
-        this.grad += grad / this.value
+      () => {
+        this.grad += 1 / this.value * out.grad;
       }
     );
+    return out;
   }
   relu = () => {
     const out = new Parameter(
       Math.max(0, this.value),
       [this],
-      (grad: number) => {
-        this.grad += grad * (out.value > 0 ? 1 : 0)
+      () => {
+        this.grad += out.grad * (out.value > 0 ? 1 : 0)
       }
     );
     return out;
@@ -86,8 +84,8 @@ export class Parameter {
     const out = new Parameter(
       1 / (1 + Math.exp(-this.value)),
       [this],
-      (grad: number) => {
-        this.grad += grad * (out.value * (1 - out.value))
+      () => {
+        this.grad += out.grad * (out.value * (1 - out.value))
       }
     )
     return out;
@@ -96,8 +94,8 @@ export class Parameter {
     const out = new Parameter(
       Math.tanh(this.value),
       [this],
-      (grad: number) => {
-        this.grad += grad * (1 - out.value ** 2)
+      () => {
+        this.grad += out.grad * (1 - out.value ** 2)
       }
     )
     return out;
@@ -109,22 +107,20 @@ export class Parameter {
   backward = () => {
     const topo: Parameter[] = [];
     const visited = new Set<Parameter>();
-    const stack: Parameter[] = [this];
-    while(stack.length > 0) {
-      const current = stack.pop()!;
-      if(visited.has(current)) {
-        continue;
-      }
-      visited.add(current);
-      topo.push(current);
-      for(const dep of current.children) {
-        stack.push(dep);
+    function buildTopo(v: Parameter) {
+      if(!visited.has(v)) {
+        visited.add(v)
+        v.children.forEach(c => buildTopo(c));
+        topo.push(v)
       }
     }
+    buildTopo(this)
+    topo.reverse();
+
     this.grad = 1;
     for(const param of topo) {
-      param.backprop(param.grad);
+      param.gradfn();
     }
   }
-  toString = () => `v=${this.value} g=${this.grad}`
+  toString = () => `v=${this.value.toFixed(3)} g=${this.grad.toFixed(3)}`
 }
