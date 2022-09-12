@@ -13,4 +13,7 @@ export class Model {
   forward(xs: Parameter[] | Parameter[][]): Parameter[] | Parameter[][] {
     return xs;
   }
+  loadFromValues = (values: number[]) => {
+    this.parameters().forEach((p, i) => p.setValue(values[i])); 
+  }
 }
