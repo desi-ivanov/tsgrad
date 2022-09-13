@@ -2,33 +2,62 @@
 A simple automatic differentiation library
 ## Example
 ```ts
-import { ReLU, Sigmoid } from "./act";
-import { Parameter } from "./autograd";
-import { Linear } from "./linear";
-import { Sequential } from "./sequential";
+import { ReLU, Softmax } from "./src/act";
+import { Adam } from "./src/optim"
+import { Parameter } from "./src/autograd";
+import { Conv1d } from "./src/conv";
+import { Flatten } from "./src/flatten";
+import { Linear } from "./src/linear";
+import { Sequential } from "./src/sequential";
+import { argmax, reduceSum, zip } from "./src/util";
+import { trainingSet } from "./examples/mnist/dataset";
+import { Model } from "./src/model";
 
 const model = new Sequential(
-  new Linear(2, 10),
+  new Conv1d(4, 2, 1),
   new ReLU(),
-  new Linear(10, 1),
-  new Sigmoid()
+  new Conv1d(4, 2, 1),
+  new ReLU(),
+  new Conv1d(4, 2, 2),
+  new ReLU(),
+  new Flatten(),
+  new Linear(16, 10),
+  new Softmax(),
 );
 
-const xs = [[0, 0], [0, 1], [1, 0], [1, 1]].map(x => x.map(x => new Parameter(x)));
-const ys = [     0,      1,      1,      0].map(y => new Parameter(y));
+const data = trainingSet();
+const sq = Math.floor(data.images[0].length ** 0.5)
 
-const computeLoss = (ysPred: Parameter[], ysReal: Parameter[]) => ysPred.map((y, i) => y.sub(ysReal[i]).pow(2)).reduce((a, v) => a.add(v));
+const crossEntropy = (ysPred: Parameter[], y: number) => 
+  reduceSum(ysPred.map((yPred, i) => yPred.log().mul(y === i ? 1 : 0))).neg();
 
-const learning_rate = 0.01
+const xss = data.images;
+const yss = data.labels;
 
-for(let epoch = 0; epoch < 2000000; epoch++) {
-  model.zero_grad();
-  const yPred = xs.map(x => model.forward(x)).flat();
-  const loss = computeLoss(yPred, ys);
-  loss.backward();
-  model.parameters().forEach(p => p.update(learning_rate));
-  console.log(`Epoch ${epoch}: loss ${loss.getValue()}, acc ${yPred.map(y => y.getValue()).map(y => y > 0.5 ? 1 : 0).filter((y, i) => y === ys[i].getValue()).length / ys.length}`);
+const batchSize = 32;
+const learningRate = 0.01;
+
+const optim = new Adam(model.parameters(), learningRate);
+
+for(let epoch = 0; epoch < 50; epoch++) {
+  for(let i = 0; i < (xss.length / batchSize - 1); i++) {
+
+    model.zero_grad();
+    for(let j = 0; j < batchSize; j++) {
+      const x = xss[i * batchSize + j];
+      const y = yss[i * batchSize + j];
+      const xParam = Array
+        .from({ length: sq }, (_, i) => x.slice(i * sq, i * sq + sq))
+        .map(xs => xs.map(x => new Parameter(x)));
+      const yPred = model.forward(xParam) as Parameter[];
+      const loss = crossEntropy(yPred, y);
+      loss.backward();
+    }
+
+    optim.step();
+  }
 }
+
 ```
 
 ## Credits
