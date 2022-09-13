@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "bundle:web": "rollup -c rollup.config.ts --configPlugin @rollup/plugin-typescript -w"
+    "bundle:web": "rollup -c rollup.config.ts --configPlugin @rollup/plugin-typescript"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^4.1.0",
