@@ -253,29 +253,35 @@
     drawCtx.fillStyle = "#000";
     drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
     let mousedown = false;
-    drawCanvas.addEventListener("mousedown", e => {
+    const startDrawing = (x, y) => {
         mousedown = true;
         drawCtx.fillStyle = "#fff";
         drawCtx.strokeStyle = "#fff";
         drawCtx.beginPath();
-        drawCtx.moveTo(e.offsetX, e.offsetY);
-    });
-    document.body.addEventListener("mouseup", e => {
-        mousedown = false;
-        drawCtx.closePath();
-        guess();
-    });
-    drawCanvas.addEventListener("mousemove", e => {
+        drawCtx.moveTo(x, y);
+    };
+    const keepDrawing = (x, y) => {
         if (mousedown) {
             drawCtx.lineWidth = pixelMultiplier * 3;
             drawCtx.lineCap = "round";
             drawCtx.lineJoin = "round";
-            drawCtx.lineTo(e.offsetX, e.offsetY);
+            drawCtx.lineTo(x, y);
             drawCtx.stroke();
-            drawCtx.moveTo(e.offsetX, e.offsetY);
+            drawCtx.moveTo(x, y);
             guessWithCooldown();
         }
-    });
+    };
+    const stopDrawing = () => {
+        mousedown = false;
+        drawCtx.closePath();
+        guess();
+    };
+    drawCanvas.addEventListener("mousedown", e => startDrawing(e.offsetX, e.offsetY));
+    drawCanvas.addEventListener("touchstart", e => startDrawing(e.touches[0].clientX, e.touches[0].clientY));
+    drawCanvas.addEventListener("mousemove", e => keepDrawing(e.offsetX, e.offsetY));
+    drawCanvas.addEventListener("touchmove", e => keepDrawing(e.touches[0].clientX, e.touches[0].clientY));
+    document.body.addEventListener("mouseup", stopDrawing);
+    document.body.addEventListener("touchup", stopDrawing);
     const model = new Sequential(new Conv2d(4, 3, 2, 0), new ReLU(), new Conv2d(4, 3, 2, 0), new ReLU(), new Flatten(), new Linear(144, 10), new Softmax());
     model.loadFromValues(savedModelParams);
     const drawGrayscaleOnCanvas = (canvas, img) => {
