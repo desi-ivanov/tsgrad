@@ -277,9 +277,9 @@
         guess();
     };
     drawCanvas.addEventListener("mousedown", e => startDrawing(e.offsetX, e.offsetY));
-    drawCanvas.addEventListener("touchstart", e => { e.preventDefault(); startDrawing(e.touches[0].clientX, e.touches[0].clientY); });
+    drawCanvas.addEventListener("touchstart", e => { e.preventDefault(); startDrawing(e.touches[0].clientX - drawCanvas.offsetLeft, e.touches[0].clientY - drawCanvas.offsetTop); });
     drawCanvas.addEventListener("mousemove", e => keepDrawing(e.offsetX, e.offsetY));
-    drawCanvas.addEventListener("touchmove", e => { e.preventDefault(); keepDrawing(e.touches[0].clientX, e.touches[0].clientY); });
+    drawCanvas.addEventListener("touchmove", e => { e.preventDefault(); keepDrawing(e.touches[0].clientX - drawCanvas.offsetLeft, e.touches[0].clientY - drawCanvas.offsetTop); });
     document.body.addEventListener("mouseup", stopDrawing);
     document.body.addEventListener("touchup", stopDrawing);
     const model = new Sequential(new Conv2d(4, 3, 2, 0), new ReLU(), new Conv2d(4, 3, 2, 0), new ReLU(), new Flatten(), new Linear(144, 10), new Softmax());
