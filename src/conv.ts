@@ -31,3 +31,29 @@ export class Conv1d extends Model {
     return output;
   }
 }
+
+
+export class Conv2d extends Model {
+  private convs: Conv1d[];
+  constructor(
+    public readonly out_channels: number,
+    public readonly kernel_size: number,
+    public readonly stride: number,
+    public readonly padding: number,
+    public readonly initializer: (() => number) = () => Math.random() * 2 - 1
+  ) {
+    super();
+    this.convs = Array.from({ length: out_channels }, () => new Conv1d(kernel_size, stride, padding, initializer));
+  }
+  parameters = () => this.convs.flatMap(conv => conv.parameters());
+  forward = (xs: Parameter[][][]): Parameter[][][] => {
+
+    const res = 
+      this.convs.map(conv => xs.map(x => conv.forward(x)).reduce((a, b) => a.map((row, i) => row.map((_, j) => a[i][j].add(b[i][j])))));
+
+    if(res.length !== this.out_channels) throw new Error(`Invalid output channels`);
+
+    return res;
+  }
+    
+}
