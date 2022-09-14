@@ -1,6 +1,7 @@
 import { ReLU, Softmax } from "../../src/act";
 import { Parameter } from "../../src/autograd";
-import { Conv1d } from "../../src/conv";
+import { Conv1d, Conv2d } from "../../src/conv";
+import { Dropout } from "../../src/dropout";
 import { Flatten } from "../../src/flatten";
 import { Linear } from "../../src/linear";
 import { Sequential } from "../../src/sequential";
@@ -9,11 +10,10 @@ const drawCanvas = document.getElementById("draw") as HTMLCanvasElement;
 const canvas1 = document.getElementById("display1") as HTMLCanvasElement;
 const canvas2 = document.getElementById("display2") as HTMLCanvasElement;
 const canvas3 = document.getElementById("display3") as HTMLCanvasElement;
-const canvas4 = document.getElementById("display4") as HTMLCanvasElement;
 const resetButton = document.getElementById("btn-reset") as HTMLButtonElement;
 const guessDiv = document.getElementById("result-guess") as HTMLDivElement;
 const pixelMultiplier = 14;
-[drawCanvas, canvas1, canvas2, canvas3, canvas4].forEach(canvas => {
+[drawCanvas, canvas1, canvas2, canvas3].forEach(canvas => {
   canvas.width = 28 * pixelMultiplier;
   canvas.height = 28 * pixelMultiplier;
 });
@@ -21,7 +21,7 @@ const drawCtx = drawCanvas.getContext("2d")!;
 
 
 resetButton.addEventListener("click", () => {
-  [drawCanvas, canvas1, canvas2, canvas3, canvas4].forEach(canvas => {
+  [drawCanvas, canvas1, canvas2, canvas3].forEach(canvas => {
     const ctx = canvas.getContext("2d")!;
     ctx.fillStyle = "#000"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -42,6 +42,7 @@ drawCanvas.addEventListener("mousedown", e => {
 document.body.addEventListener("mouseup", e => {
   mousedown = false
   drawCtx.closePath();
+  guess();
 })
 
 drawCanvas.addEventListener("mousemove", e => {
@@ -52,19 +53,17 @@ drawCanvas.addEventListener("mousemove", e => {
     drawCtx.lineTo(e.offsetX, e.offsetY)
     drawCtx.stroke();
     drawCtx.moveTo(e.offsetX, e.offsetY);
-    guess();
+    guessWithCooldown();
   }
 });
 
 const model = new Sequential(
-  new Conv1d(4, 2, 1),
+  new Conv2d(4, 3, 2, 0),
   new ReLU(),
-  new Conv1d(4, 2, 1),
-  new ReLU(),
-  new Conv1d(4, 2, 2),
+  new Conv2d(4, 3, 2, 0),
   new ReLU(),
   new Flatten(),
-  new Linear(16, 10),
+  new Linear(144, 10),
   new Softmax(),
 );
 
@@ -115,7 +114,18 @@ const normalize = (img: number[][]) => {
   return img.map(row => row.map(v => (v - min) / (max - min)));
 }
 
-function guess() {
+const withCooldown = (fn: () => void, cooldown: number) => {
+  let lastCall = 0;
+  return () => {
+    const now = Date.now();
+    if(now - lastCall > cooldown) {
+      lastCall = now;
+      fn();
+    }
+  }
+}
+
+const guess = () => {
   const imgData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
   const imgbw = Array.from({ length: drawCanvas.height }, (_, y) =>
     Array.from({ length: drawCanvas.width, }, (_, x) => {
@@ -125,16 +135,19 @@ function guess() {
   );
   const imgbwDownsized = downsizeGrayscale(imgbw, [28, 28]);
   drawGrayscaleOnCanvas(canvas1, imgbwDownsized);
-  let x: Parameter[] | Parameter[][] = imgbwDownsized.map(row => row.map(v => new Parameter(v)));
-  const canvasses = [canvas2, canvas3, canvas4];
+  let x: Parameter[] | Parameter[][] | Parameter[][][] = [imgbwDownsized.map(row => row.map(v => new Parameter(v)))];
+  const canvasses = [canvas2, canvas3];
   for(let i = 0; i < model.layers.length; i++) {
     x = model.layers[i].forward(x);
-    if(model.layers[i] instanceof Conv1d) {
-      drawGrayscaleOnCanvas(canvasses.shift()!, normalize((x as Parameter[][]).map(row => row.map(p => p.getValue()))));
+    if(model.layers[i] instanceof Conv2d) {
+      drawGrayscaleOnCanvas(canvasses.shift()!, normalize((x[0] as Parameter[][]).map(row => row.map(p => p.getValue()))));
     }
   }
   output(x as Parameter[]);
 }
+
+const guessWithCooldown = withCooldown(guess, 100);
+
 function output(outputs: Parameter[]) {
   const g = outputs.map((p, num) => ({ p, num }));
   g.sort((a, b) => b.p.getValue() - a.p.getValue());
