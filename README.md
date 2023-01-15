@@ -62,3 +62,7 @@ for(let epoch = 0; epoch < 50; epoch++) {
 
 ## Credits
 Highly inspired by torch's [autograd](https://pytorch.org/docs/stable/autograd.html) and Karpathy's [micrograd](https://github.com/karpathy/micrograd).
+
+# License
+
+MIT
